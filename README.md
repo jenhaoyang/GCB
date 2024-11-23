@@ -2,7 +2,19 @@
 歡迎各位苦主加入
 * 適用Ubuntu 22.04
 * TWGCB-01-014 (V1.0)
-  
+
+* 安裝Ansible
+```bash
+pip install ansible
+```
+* 把Ansible的路徑(/home/<使用者名稱>/.local/bin)加入Path，並且寫到~/.bashrc，可以注意pip安裝結束後的警告，他會寫出要加入PATH的路徑
+* source ~/.bashrc
+* 照著[官方範例](https://docs.ansible.com/ansible/latest/getting_started/get_started_inventory.html)測試一下，注意這個測試的先決條件是把ssh public key家到遠端server，如果沒有加的話可以在指令手動輸入
+```
+ansible myhosts -m ping -i inventory.yaml -u my-user-name --ask-pass
+```
+
+
 待辦事項
 - [ ] 操作手冊
 
