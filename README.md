@@ -14,6 +14,10 @@ pip install ansible
 ansible myhosts -m ping -i inventory.yaml -u my-user-name --ask-pass
 ```
 
+* 執行playbook
+```
+ansible-playbook -i inventory.yaml -u my-user-name --ask-pass --ask-become-pass playbook.yaml
+```
 
 待辦事項
 - [ ] 操作手冊

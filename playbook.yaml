@@ -1,0 +1,25 @@
+- name: TWG CB01-014-0001
+  hosts: all
+  become: yes
+  tasks:
+    - name: Ensure cramfs is blacklisted in modprobe configuration
+      copy:
+        dest: /etc/modprobe.d/cramfs.conf
+        content: |
+          install cramfs /bin/false
+          blacklist cramfs
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Remove cramfs module if loaded
+      command: modprobe -r cramfs
+      register: modprobe_result
+      failed_when: modprobe_result.rc not in [0, 1]
+      ignore_errors: yes
+
+    - name: Verify cramfs module is removed
+      shell: lsmod | grep -w cramfs
+      register: cramfs_check
+      failed_when: cramfs_check.rc == 0
+      ignore_errors: yes
