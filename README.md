@@ -19,6 +19,12 @@ ansible myhosts -m ping -i inventory.yaml -u my-user-name --ask-pass
 ansible-playbook -i inventory.yaml -u my-user-name --ask-pass --ask-become-pass playbook.yaml
 ```
 
+# 潛在風險
+* TWGCB01-014-0002
+停止支援 squashfs 檔案系統，將可能導致 Snap 套件無法正常運作
+
+
+
 待辦事項
 - [ ] 操作手冊
 

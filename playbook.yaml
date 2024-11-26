@@ -1,4 +1,4 @@
-- name: TWG CB01-014-0001
+- name: TWGCB01-014-0001 Disable cramfs filesystem support
   hosts: all
   become: yes
   tasks:
@@ -23,3 +23,100 @@
       register: cramfs_check
       failed_when: cramfs_check.rc == 0
       ignore_errors: yes
+
+- name: TWGCB01-014-0002 Disable squashfs filesystem support
+  hosts: all
+  become: yes
+  tasks:
+    - name: Ensure squashfs is blacklisted in modprobe configuration
+      copy:
+        dest: /etc/modprobe.d/squashfs.conf
+        content: |
+          install squashfs /bin/false
+          blacklist squashfs
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Remove squashfs module if loaded
+      command: modprobe -r squashfs
+      register: modprobe_result
+      failed_when: modprobe_result.rc not in [0, 1]
+      ignore_errors: yes
+
+    - name: Verify squashfs module is removed
+      shell: lsmod | grep -w squashfs
+      register: squashfs_check
+      failed_when: squashfs_check.rc == 0
+      ignore_errors: yes
+      changed_when: squashfs_check.rc == 0
+
+
+
+- name: TWGCB01-014-0003管理 udf 模組設定
+  hosts: all
+  become: true
+  tasks:
+    - name: Ensure /etc/modprobe.d/udf.conf contains required configuration
+      ansible.builtin.blockinfile:
+        path: /etc/modprobe.d/udf.conf
+        block: |
+          install udf /bin/false
+          blacklist udf
+        create: yes
+        state: present
+
+    - name: Remove udf kernel module
+      ansible.builtin.command:
+        cmd: modprobe -r udf
+      register: udf_removal
+      failed_when: udf_removal.rc not in [0, 1]
+      changed_when: udf_removal.rc == 0
+
+    - name: Ensure udf kernel module is not loaded
+      ansible.builtin.shell: lsmod | grep -q '^udf'
+      register: udf_loaded_check
+      failed_when: false
+      changed_when: false
+
+    - name: Fail if udf module is still loaded
+      ansible.builtin.fail:
+        msg: "The udf module is still loaded!"
+      when: udf_loaded_check.rc == 0
+
+
+- name: TWGCB01-014-0004 Configure /tmp mount in /etc/fstab
+  hosts: all
+  become: yes
+  tasks:
+    - name: Ensure /tmp mount is configured in /etc/fstab
+      ansible.builtin.mount:
+        path: /tmp
+        src: tmpfs
+        fstype: tmpfs
+        opts: defaults,rw,nosuid,nodev,noexec,relatime
+        dump: 0
+        passno: 0
+        state: mounted
+
+- name: TWGCB01-014-0005 Add nodev option to /tmp mount and remount
+  hosts: all
+  become: yes
+  tasks:
+    - name: Ensure /tmp mount in /etc/fstab has 'nodev' option
+      ansible.builtin.lineinfile:
+        path: /etc/fstab
+        regexp: '^tmpfs\s+/tmp\s+tmpfs'
+        line: 'tmpfs /tmp tmpfs defaults,rw,nosuid,nodev,noexec,relatime'
+        backrefs: yes
+        state: present
+
+    - name: Remount /tmp with the updated options
+      ansible.builtin.mount:
+        path: /tmp
+        opts: defaults,rw,nosuid,nodev,noexec,relatime
+        state: mounted
+        fstype: tmpfs
+        src: tmpfs
+
+        
