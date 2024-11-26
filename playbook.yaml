@@ -99,24 +99,20 @@
         passno: 0
         state: mounted
 
+# reference https://stackoverflow.com/a/48259691
 - name: TWGCB01-014-0005 Add nodev option to /tmp mount and remount
   hosts: all
   become: yes
   tasks:
-    - name: Ensure /tmp mount in /etc/fstab has 'nodev' option
-      ansible.builtin.lineinfile:
-        path: /etc/fstab
-        regexp: '^tmpfs\s+/tmp\s+tmpfs'
-        line: 'tmpfs /tmp tmpfs defaults,rw,nosuid,nodev,noexec,relatime'
-        backrefs: yes
-        state: present
+  - name: '/etc/fstab: Set opt "nodev" for mount point /tmp'
+    lineinfile:
+      path: /etc/fstab
+      backup: yes
+      backrefs: yes
+      regexp: '^(\S+\s+/tmp\s+\S+\s+)(?!(?:\S*,)?nodev(?:,\S*)?\s+)(\S+)(\s+.+)$'
+      line: '\1nodev,\2\3'
+    register: fstab
 
-    - name: Remount /tmp with the updated options
-      ansible.builtin.mount:
-        path: /tmp
-        opts: defaults,rw,nosuid,nodev,noexec,relatime
-        state: mounted
-        fstype: tmpfs
-        src: tmpfs
-
-        
+  - name: 'If /tmp changed, remount'
+    command: 'mount /tmp -o remount'
+    when: fstab.changed
