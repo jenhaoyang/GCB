@@ -116,3 +116,62 @@
   - name: 'If /tmp changed, remount'
     command: 'mount /tmp -o remount'
     when: fstab.changed
+
+- name: TWGCB01-014-0006 Ensure /tmp has nosuid option in /etc/fstab and remount
+  hosts: all
+  become: yes
+  tasks:
+    - name: Ensure /tmp mount in /etc/fstab includes nosuid option
+      ansible.builtin.lineinfile:
+        path: /etc/fstab
+        regexp: '^tmpfs\s+/tmp\s+tmpfs'
+        line: 'tmpfs /tmp tmpfs defaults,rw,nosuid,nodev,noexec,relatime'
+        backrefs: yes
+        state: present
+
+    - name: Remount /tmp with nosuid option
+      ansible.builtin.mount:
+        path: /tmp
+        src: tmpfs
+        fstype: tmpfs
+        opts: defaults,rw,nosuid,nodev,noexec,relatime
+        state: mounted
+
+- name: TWGCB01-014-0007 Ensure /tmp has noexec option in /etc/fstab and remount
+  hosts: all
+  become: yes
+  tasks:
+    - name: Ensure /tmp mount in /etc/fstab includes noexec option
+      ansible.builtin.lineinfile:
+        path: /etc/fstab
+        regexp: '^tmpfs\s+/tmp\s+tmpfs'
+        line: 'tmpfs /tmp tmpfs defaults,rw,nosuid,nodev,noexec,relatime'
+        backrefs: yes
+        state: present
+
+    - name: Remount /tmp with noexec option
+      ansible.builtin.mount:
+        path: /tmp
+        src: tmpfs
+        fstype: tmpfs
+        opts: defaults,rw,nosuid,nodev,noexec,relatime
+        state: mounted
+
+- name: TWGCB01-014-0008, TWGCB01-014-0009, TWGCB01-014-0010 Ensure /dev/shm has nodev,nosuid,noexec option in /etc/fstab and remount
+  hosts: all
+  become: yes
+  tasks:
+    - name: Ensure /dev/shm entry exists in /etc/fstab with nodev option
+      ansible.builtin.lineinfile:
+        path: /etc/fstab
+        regexp: '^tmpfs\s+/dev/shm\s+tmpfs'
+        line: 'tmpfs /dev/shm tmpfs rw,nosuid,nodev,noexec,inode64 0 0'
+        state: present
+
+    - name: Remount /dev/shm with nodev option
+      ansible.builtin.mount:
+        path: /dev/shm
+        src: tmpfs
+        fstype: tmpfs
+        opts: rw,nosuid,nodev,noexec,inode64
+        state: mounted
