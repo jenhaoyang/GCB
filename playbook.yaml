@@ -175,3 +175,30 @@
         fstype: tmpfs
         opts: rw,nosuid,nodev,noexec,inode64
         state: mounted
+
+- name: TWGCB01-014-0011~TWGCB01-014-0025
+  hosts: all
+  become: yes
+  tasks:
+    - name: Gather information about mounted filesystems
+      ansible.builtin.command:
+        cmd: mount | grep ' /var '
+      register: var_mount_info
+      failed_when: false
+
+    - name: TWGCB01-014-0011 Check if /var is a separate partition or logical volume
+      ansible.builtin.debug:
+        msg: "/var is a separate partition or logical volume."
+      when: var_mount_info.stdout != ""
+
+    - name: Add warning if /var is not a separate partition
+      ansible.builtin.fail:
+        msg: "WARNING: /var is not a separate partition or logical volume. check https://download.nics.nat.gov.tw/UploadFile/attachfilegcb/TWGCB-01-014_Ubuntu%2022.04%20LTS政府組態基準說明文件v1.0_1130930.pdf for further imformation. Pass tasks until TWGCB01-014-0026"
+      when: var_mount_info.stdout == ""
+
+    - name: Force handlers to run (ensure warnings are displayed at the end)
+      meta: flush_handlers
+
+    
+
+

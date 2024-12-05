@@ -31,6 +31,8 @@ ansible-playbook -i inventory.yaml -u my-user-name --ask-pass --ask-become-pass 
 # 潛在風險
 * TWGCB01-014-0002
 停止支援 squashfs 檔案系統，將可能導致 Snap 套件無法正常運作
+* TWGCB01-014-0010
+要求/var必須為獨立之分割磁區或邏輯磁區，對於現存/var沒有獨立之分割磁區或邏輯磁區的系統影響巨大。
 
 
 
