@@ -176,7 +176,7 @@
         opts: rw,nosuid,nodev,noexec,inode64
         state: mounted
 
-- name: TWGCB01-014-0011~TWGCB01-014-0025
+- name: TWGCB01-014-0011~TWGCB01-014-0013
   hosts: all
   become: yes
   tasks:
@@ -200,6 +200,121 @@
     - name: Force handlers to run (ensure warnings are displayed at the end)
       meta: flush_handlers
 
-    
+    - name: TWGCB01-014-0012-0013 Ensure /var entry exists in /etc/fstab with nodev option
+      ansible.builtin.lineinfile:
+        path: /etc/fstab
+        regexp: '^tmpfs\s+/var\s+tmpfs'
+        line: 'tmpfs /var tmpfs rw,nosuid,nodev 0 0'
+        state: present
+      when: not is_var_separate
 
+    - name: Remount /var with nodev option
+      ansible.builtin.mount:
+        path: /var
+        src: tmpfs
+        fstype: tmpfs
+        opts: rw,nosuid,nodev
+        state: mounted
+      when: not is_var_separate
+
+    
+- name: TWGCB01-014-0014~TWGCB01-014-0017
+hosts: all
+become: yes
+tasks:
+  - name: Check if /var/tmp is a separate partition
+    ansible.builtin.set_fact:
+      is_var_separate: >-
+        {{
+          ansible_facts['mounts'] | selectattr('mount', 'equalto', '/var/tmp') | list | length > 0
+        }}
+
+  - name: Debug the result for /var/tmp partition check
+    ansible.builtin.debug:
+      msg: >
+        "/var/tmp is {{ 'a separate partition' if is_var_separate else 'not a separate partition' }}."
+
+  - name: Add warning if /var/tmp is not a separate partition
+    ansible.builtin.fail:
+      msg: "WARNING: /var/tmp is not a separate partition or logical volume. check https://download.nics.nat.gov.tw/UploadFile/attachfilegcb/TWGCB-01-014_Ubuntu%2022.04%20LTS政府組態基準說明文件v1.0_1130930.pdf for further imformation. Pass tasks until TWGCB01-014-0026"
+    when: not is_var_separate
+
+  - name: Force handlers to run (ensure warnings are displayed at the end)
+    meta: flush_handlers
+        
+    
+    
+- name: TWGCB01-014-0018~TWGCB01-014-0021
+  hosts: all
+  become: yes
+  tasks:
+    - name: Check if /var/log is a separate partition
+      ansible.builtin.set_fact:
+        is_var_separate: >-
+          {{
+            ansible_facts['mounts'] | selectattr('mount', 'equalto', '/var/log') | list | length > 0
+          }}
+
+    - name: Debug the result for /var/log partition check
+      ansible.builtin.debug:
+        msg: >
+          "/var/log is {{ 'a separate partition' if is_var_separate else 'not a separate partition' }}."
+
+    - name: Add warning if /var/log is not a separate partition
+      ansible.builtin.fail:
+        msg: "WARNING: /var/log is not a separate partition or logical volume. check https://download.nics.nat.gov.tw/UploadFile/attachfilegcb/TWGCB-01-014_Ubuntu%2022.04%20LTS政府組態基準說明文件v1.0_1130930.pdf for further imformation. Pass tasks until TWGCB01-014-0026"
+      when: not is_var_separate
+
+    - name: Force handlers to run (ensure warnings are displayed at the end)
+      meta: flush_handlers
+    
+    
+- name: TWGCB01-014-0022~TWGCB01-014-0025
+  hosts: all
+  become: yes
+  tasks:
+    - name: Check if /var/log/audit is a separate partition
+      ansible.builtin.set_fact:
+        is_var_separate: >-
+          {{
+            ansible_facts['mounts'] | selectattr('mount', 'equalto', '/var/log/audit') | list | length > 0
+          }}
+
+    - name: Debug the result for /var/log/audit partition check
+      ansible.builtin.debug:
+        msg: >
+          "/var/log/audit is {{ 'a separate partition' if is_var_separate else 'not a separate partition' }}."
+
+    - name: Add warning if /var/log/audit is not a separate partition
+      ansible.builtin.fail:
+        msg: "WARNING: /var/log/audit is not a separate partition or logical volume. check https://download.nics.nat.gov.tw/UploadFile/attachfilegcb/TWGCB-01-014_Ubuntu%2022.04%20LTS政府組態基準說明文件v1.0_1130930.pdf for further imformation. Pass tasks until TWGCB01-014-0026"
+      when: not is_var_separate
+
+    - name: Force handlers to run (ensure warnings are displayed at the end)
+      meta: flush_handlers
+    
+    
+- name: TWGCB01-014-0026~TWGCB01-014-0028
+  hosts: all
+  become: yes
+  tasks:
+    - name: Check if /home is a separate partition
+      ansible.builtin.set_fact:
+        is_var_separate: >-
+          {{
+            ansible_facts['mounts'] | selectattr('mount', 'equalto', '/home') | list | length > 0
+          }}
+
+    - name: Debug the result for /home partition check
+      ansible.builtin.debug:
+        msg: >
+          "/home is {{ 'a separate partition' if is_var_separate else 'not a separate partition' }}."
+
+    - name: Add warning if /home is not a separate partition
+      ansible.builtin.fail:
+        msg: "WARNING: /home is not a separate partition or logical volume. check https://download.nics.nat.gov.tw/UploadFile/attachfilegcb/TWGCB-01-014_Ubuntu%2022.04%20LTS政府組態基準說明文件v1.0_1130930.pdf for further imformation. Pass tasks until TWGCB01-014-0026"
+      when: not is_var_separate
+
+    - name: Force handlers to run (ensure warnings are displayed at the end)
+      meta: flush_handlers
 
